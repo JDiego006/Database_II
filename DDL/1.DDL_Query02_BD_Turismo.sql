@@ -237,3 +237,22 @@ CREATE TABLE RRHH.Persona (
  PRINT 'Tabla RRHH.Persona creada';
  GO
 
+
+-- Crear la tabla Cargo 
+IF OBJECT_ID('RRH.Cargo', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE RRHH.Cargo;
+    PRINT 'La tabla Cargo.Persona eliminada';
+END
+GO
+
+CREATE TABLE RRHH.Cargo (
+    ID_Cargo INT IDENTITY (1,1),
+    Nombre_Cargo VARCHAR(50) NOT NULL,
+    Descripcion VARCHAR(MAX),
+    Salario_Base DECIMAL(10,2),
+    CONSTRAINT PK_CARGO PRIMARY KEY (ID_Cargo)
+);
+PRINT ('Tabla RRHH.Cargo creada');
+GO
+
