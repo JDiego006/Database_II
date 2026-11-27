@@ -638,3 +638,74 @@ CREATE TABLE Lugar.Lugar_Turistico(
 );
 PRINT 'Tabla Lugar.Lugar_Turistico creada';
 GO
+
+-- 24. Direccion_Lugar_Turistico
+IF OBJECT_ID('Lugar.Direccion_Lugar_Turistico', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Lugar.Direccion_Lugar_Turistico;
+    PRINT 'La tabla Lugar.Direccion_Lugar_Turistico eliminada';
+END
+GO
+
+CREATE TABLE Lugar.Direccion_Lugar_Turistico(
+    ID_Lugar_Turistico INT NOT NULL,
+    ID_Direccion INT NOT NULL,
+    Tipo_Direccion VARCHAR(20) NOT NULL DEFAULT 'Fisica',
+    Referencia VARCHAR(MAX),
+    Es_Principal BIT DEFAULT 0,
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_Direccion_Lugar_Turistico PRIMARY KEY (ID_Lugar_Turistico, ID_Direccion),
+    CONSTRAINT FK_Lugar_Turistico_Direccion_Lugar_Turistico FOREIGN KEY (ID_Lugar_Turistico) REFERENCES Lugar.Lugar_Turistico(ID_Lugar_Turistico),
+    CONSTRAINT FK_Direccion_Direccion_Lugar_Turistico FOREIGN KEY (ID_Direccion) REFERENCES JDCC.Direccion(ID_Direccion)
+);
+PRINT 'Tabla Lugar.Direccion_Lugar_Turistico creada';
+GO
+
+-- 25. Tipo_Transporte
+IF OBJECT_ID('Transporte.Tipo_Transporte', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Transporte.Tipo_Transporte;
+    PRINT 'La tabla Transporte.Tipo_Transporte eliminada';
+END
+GO
+
+CREATE TABLE Transporte.Tipo_Transporte(
+    ID_Tipo_Transporte INT IDENTITY(1,1), 
+    Nombre VARCHAR(50) NOT NULL,
+    Descripcion VARCHAR(MAX),
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_Tipo_Transporte PRIMARY KEY (ID_Tipo_Transporte),
+    CONSTRAINT UQ_Nombre_Tranporte UNIQUE(Nombre)
+);
+PRINT 'Tabla Transporte.Tipo_Transporte creada';
+GO
+
+-- 26. Vehiculo
+IF OBJECT_ID('Transporte.Vehiculo', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Transporte.Vehiculo;
+    PRINT 'La tabla Transporte.Vehiculo eliminada';
+END
+GO
+
+CREATE TABLE Transporte.Vehiculo(
+    ID_Vehiculo INT IDENTITY(1,1),
+    CONSTRAINT PK_Vehiculo PRIMARY KEY (ID_Vehiculo),
+    ID_Proveedor INT NOT NULL,
+    CONSTRAINT FK_Vehiculo_Proveedor FOREIGN KEY (ID_Proveedor) REFERENCES Compras.Proveedor(ID_Persona),
+    Placa VARCHAR(10) NOT NULL,
+    CONSTRAINT UQ_Placa UNIQUE (Placa),
+    Marca VARCHAR(50),
+    Modelo VARCHAR(50),
+    Capacidad_Pasajeros INT NOT NULL,
+    Anio_Fabricacion INT NOT NULL
+    CONSTRAINT CHK_Anio_Fab CHECK(Anio_Fabricacion BETWEEN 2000 AND YEAR(GETDATE())),
+    Precio_KM DECIMAL(10,2),
+    Precio_Hora DECIMAL (10,2),
+    Precio_Dia DECIMAL (10,2),
+    Estado_Vehiculo VARCHAR(20) DEFAULT 'Disponible',
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT CHK_Estado_Vehiculo CHECK (Estado_Vehiculo in ('Disponible','En Servicio', 'En Mantenimiento','Fuera Servicio'))
+);
+PRINT 'Tabla Transporte.Vehiculo creada';
+GO
