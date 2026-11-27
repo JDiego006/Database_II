@@ -62,6 +62,17 @@ BEGIN
 END
 GO
 
+IF SCHEMA_ID(N'Hospedaje') IS NULL
+BEGIN
+    EXEC(N'CREATE SCHEMA Hospedaje AUTHORIZATION dbo;');
+    PRINT 'Se ha creado el esquema Hospedaje';
+END
+ELSE 
+BEGIN 
+    PRINT 'Esquema Hospedaje existe'
+END;
+GO
+
 /*
 Creación de Tablas
 Validar Existencia -> Crear la tabla
@@ -422,7 +433,7 @@ PRINT 'Tabla Compras.Proveedor creada';
 GO
 
 -- 16. Direccion_Proveedor
-IF OBJECT_ID('RRHH.Direccion_Proveeodr', 'U') IS NOT NULL
+IF OBJECT_ID('RRHH.Direccion_Proveedor', 'U') IS NOT NULL
 BEGIN
     DROP TABLE RRHH.Direccion_Proveedor;
     PRINT 'La tabla RRHH.Direccion_Proveedor eliminada';
@@ -444,3 +455,109 @@ CREATE TABLE RRHH.Direccion_Proveedor (
 );
 PRINT 'Tabla RRHH.Direccion_Proveedor creada';
 GO
+
+-- 17. Tipo_Alojamiento
+IF OBJECT_ID('Hospedaje.Tipo_Alojamiento', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Hospedaje.Tipo_Alojamiento;
+    PRINT 'La tabla Hospedaje.Tipo_Alojamiento eliminada';
+END
+GO
+
+CREATE TABLE Hospedaje.Tipo_Alojamiento(
+    ID_Tipo_Alojamiento INT IDENTITY(1,1), 
+    Nombre_Tipo VARCHAR(50) NOT NULL, --Hotel, Casa de Campo, Hostal, 
+    Descripcion NVARCHAR(MAX) NULL, 
+    Icono_URL VARCHAR(255) NULL,
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_Tipo_Alojamiento PRIMARY KEY (ID_Tipo_Alojamiento),
+    CONSTRAINT UQ_Nombre_Tipo UNIQUE (Nombre_Tipo)
+);
+PRINT 'Tabla Hospedaje.Tipo_Alojamiento creada'
+GO
+
+-- 18. Alojamiento
+IF OBJECT_ID('Hospedaje.Alojamiento', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Hospedaje.Alojamiento;
+    PRINT 'La tabla Hospedaje.Alojamiento eliminada';
+END
+GO
+
+CREATE TABLE Hospedaje.Alojamiento (
+    ID_Alojamiento int identity(1,1), 
+    CONSTRAINT PK_Alojamiento PRIMARY KEY (ID_Alojamiento), 
+    ID_Tipo_Alojamiento INT NOT NULL,
+    CONSTRAINT FK_Tipo_Alojamiento FOREIGN KEY (ID_Tipo_Alojamiento) REFERENCES Hospedaje.Tipo_Alojamiento(ID_Tipo_Alojamiento),
+    NONBRE VARCHAR(100) NOT NULL,
+    Telefono VARCHAR(20),
+    Correo VARCHAR(100), 
+    Categoria_Estrellas TINYINT, 
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT CHK_Categoria_Estrellas CHECK (Categoria_Estrellas BETWEEN 1 AND 5) -- Aplica solo a hoteles
+); 
+PRINT 'Tabla Hospedaje.Alojamiento creada'
+GO
+
+-- 19. Direccion_Alojamiento
+IF OBJECT_ID('Hospedaje.Direccion_Alojamiento', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Hospedaje.Direccion_Alojamiento;
+    PRINT 'La tabla Hospedaje.Direccion_Alojamiento eliminada';
+END
+GO
+
+CREATE TABLE Hospedaje.Direccion_Alojamiento (
+    ID_Alojamiento INT NOT NULL, 
+    ID_Direccion INT NOT NULL,
+    Tipo_Direccion VARCHAR(20) NOT NULL DEFAULT 'Física',
+    Referencia VARCHAR(MAX),
+    Es_Principal BIT DEFAULT 0,
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_Direccion_Alojamiento PRIMARY KEY (ID_Alojamiento, ID_Direccion),
+    CONSTRAINT FK_ID_Alojamiento FOREIGN KEY (ID_Alojamiento) REFERENCES Hospedaje.Alojamiento(ID_Alojamiento), 
+    CONSTRAINT FK_ID_Direccion FOREIGN KEY (ID_Direccion) REFERENCES JDCC.Direccion(ID_Direccion)
+);
+PRINT 'Tabla Hospedaje.Direccion_Alojamiento creada'
+GO
+
+-- 20. Proveedor_Alojamiento
+IF OBJECT_ID('Hospedaje.Proveedor_Alojamiento', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Hospedaje.Proveedor_Alojamiento;
+    PRINT 'La tabla Hospedaje.Proveedor_Alojamiento eliminada';
+END
+GO
+
+CREATE TABLE Hospedaje.Proveedor_Alojamiento(
+    ID_Proveedor_Alojamiento INT NOT NULL IDENTITY(1,1),
+    ID_Persona INT NOT NULL,
+    ID_Alojamiento INT NOT NULL,
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_Proveedor_Alojamiento PRIMARY KEY (ID_Proveedor_Alojamiento), 
+    CONSTRAINT FK_Persona_Proveedor_Alojamiento FOREIGN KEY (ID_Persona) REFERENCES RRHH.Persona(ID_Persona),
+    CONSTRAINT FK_Alojamiento_Proveedor_Alojamiento FOREIGN KEY (ID_Alojamiento) REFERENCES Hospedaje.Alojamiento(ID_Alojamiento)
+);
+PRINT 'Tabla Hospedaje.Proveedor_Alojamiento creada'
+GO
+
+-- 21. Tipo_Habitacion
+IF OBJECT_ID('Hospedaje.Tipo_Habitacion', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Hospedaje.Tipo_Habitacion;
+    PRINT 'La tabla Hospedaje.Tipo_Habitacion eliminada';
+END
+GO
+
+CREATE TABLE Hospedaje.Tipo_Habitacion(
+    ID_Tipo_Habitacion INT IDENTITY(1,1),
+    CONSTRAINT PK_ID_Tipo_Habitacion PRIMARY KEY (ID_Tipo_Habitacion),
+    Nombre_Habitacion VARCHAR(50) NOT NULL,
+    CONSTRAINT UQ_Nombre_Habitacion UNIQUE (Nombre_Habitacion),
+    Capacidad_Persona INT NOT NULL,
+    Descripcion VARCHAR(MAX),
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+);
+PRINT 'Tabla Hospedaje.Tipo_Habitacion creada';
+GO
+
