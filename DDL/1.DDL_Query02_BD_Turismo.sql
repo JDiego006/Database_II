@@ -73,6 +73,28 @@ BEGIN
 END;
 GO
 
+IF SCHEMA_ID(N'Lugar') IS NULL
+BEGIN
+    EXEC(N'CREATE SCHEMA Lugar AUTHORIZATION dbo;');
+    PRINT 'Se ha creado el esquema Lugar';
+END
+ELSE 
+BEGIN 
+    PRINT 'Esquema Lugar existe'
+END;
+GO
+
+IF SCHEMA_ID(N'Transporte') IS NULL
+BEGIN
+    EXEC(N'CREATE SCHEMA Transporte AUTHORIZATION dbo;');
+    PRINT 'Se ha creado el esquema Transporte';
+END
+ELSE 
+BEGIN 
+    PRINT 'Esquema Transporte existe'
+END;
+GO
+
 /*
 Creación de Tablas
 Validar Existencia -> Crear la tabla
@@ -320,6 +342,8 @@ GO
 CREATE TABLE RRHH.Empleado (
     ID_Persona INT NOT NULL,
     CONSTRAINT PK_Empleado PRIMARY KEY (ID_Persona),
+    ID_Cargo INT NOT NULL,
+    CONSTRAINT FK_Cargo_Empleado FOREIGN KEY (ID_Cargo) REFERENCES RRHH.Cargo(ID_Cargo),
     Fecha_Registro DATETIME DEFAULT GETDATE(),
     Cod_Empleado VARCHAR(15) NULL,
     Fecha_Ingreso DATE NOT NULL,
@@ -417,6 +441,7 @@ GO
 
 CREATE TABLE Compras.Proveedor (
     ID_Persona INT NOT NULL,
+    ID_Categoria_Proveedor INT NOT NULL,
     Codigo_Proveedor VARCHAR(15) NULL,
     Fecha_Inicio_Relacion DATE NOT NULL,
     Fecha_Fin_Relacion DATE NOT NULL, 
@@ -427,7 +452,8 @@ CREATE TABLE Compras.Proveedor (
     Fecha_Registro DATETIME DEFAULT GETDATE(),
     CONSTRAINT PK_Proveedor PRIMARY KEY (ID_Persona),
     CONSTRAINT CHK_Estado_Proveedor CHECK (Estado_Proveedor IN ('Activo', 'Inactivo', 'Suspendido')),
-    CONSTRAINT FK_Proveedor FOREIGN KEY (ID_Persona) REFERENCES RRHH.Persona(ID_Persona)
+    CONSTRAINT FK_Proveedor FOREIGN KEY (ID_Persona) REFERENCES RRHH.Persona(ID_Persona),
+    CONSTRAINT FK_Categoria_Proveedor FOREIGN KEY (ID_Categoria_Proveedor) REFERENCES Compras.Categoria_Proveedor(ID_Categoria_Proveedor)
 );
 PRINT 'Tabla Compras.Proveedor creada';
 GO
@@ -556,8 +582,59 @@ CREATE TABLE Hospedaje.Tipo_Habitacion(
     CONSTRAINT UQ_Nombre_Habitacion UNIQUE (Nombre_Habitacion),
     Capacidad_Persona INT NOT NULL,
     Descripcion VARCHAR(MAX),
-    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    Fecha_Registro DATETIME DEFAULT GETDATE()
 );
 PRINT 'Tabla Hospedaje.Tipo_Habitacion creada';
 GO
 
+-- 22. Habitacion
+IF OBJECT_ID('Hospedaje.Habitacion', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Hospedaje.Habitacion;
+    PRINT 'La tabla Hospedaje.Habitacion eliminada';
+END
+GO
+
+CREATE TABLE Hospedaje.Habitacion(
+    ID_Habitacion INT IDENTITY(1,1),
+    ID_Persona INT NOT NULL, 
+    ID_Alojamiento INT NOT NULL,
+    Numero_Habitacion VARCHAR(10) NOT NULL, 
+    ID_Tipo_Habitacion INT NOT NULL,
+    Precio_Noche DECIMAL(10,2) NOT NULL,
+    Estado VARCHAR(20) DEFAULT 'Disponible',
+    CONSTRAINT CHK_Estado_Habitacion CHECK (Estado in ('Disponible','Ocupado','Mantenimiento','Fuera Servicio')), 
+    Descripcion VARCHAR(MAX),
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_Habitacion PRIMARY KEY (ID_Habitacion), 
+    CONSTRAINT UQ_Habitacion UNIQUE (ID_Persona, Numero_Habitacion, ID_Alojamiento), 
+    CONSTRAINT FK_ID_Persona_Habitacion FOREIGN KEY (ID_Persona) REFERENCES RRHH.Persona(ID_Persona),
+    CONSTRAINT FK_ID_Alojamiento_Habitacion FOREIGN KEY (ID_Alojamiento) REFERENCES Hospedaje.Alojamiento(ID_Alojamiento),
+    CONSTRAINT FK_ID_Tipo_Habitacion_Habitacion FOREIGN KEY (ID_Tipo_Habitacion) REFERENCES Hospedaje.Tipo_Habitacion(ID_Tipo_Habitacion)
+); 
+PRINT 'Tabla Hospedaje.Habitacion creada';
+GO
+
+-- 23. Lugar_Turistico 
+IF OBJECT_ID('Lugar.Lugar_Turistico', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE Lugar.Lugar_Turistico;
+    PRINT 'La tabla Lugar.Lugar_Turistico eliminada';
+END
+GO
+
+CREATE TABLE Lugar.Lugar_Turistico(
+    ID_Lugar_Turistico INT IDENTITY(1,1),
+    Nombre VARCHAR(200) NOT NULL,
+    Descripcion VARCHAR(MAX) NULL,
+    Precio_Entrada DECIMAL (10,2) DEFAULT 0.00,
+    Horario_Apertura TIME NOT NULL,
+    Horario_Cierre TIME NOT NULL,
+    Calificacion DECIMAL(3,2) DEFAULT (0.0),
+    Estado VARCHAR (20) DEFAULT 'Activo',
+    Fecha_Registro DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_Lugar_Turistico PRIMARY KEY (ID_Lugar_Turistico),
+    CONSTRAINT CHK_Estado_Lugar CHECK (Estado in ('Activo','Inactivo','Temporalmente cerrado'))
+);
+PRINT 'Tabla Lugar.Lugar_Turistico creada';
+GO
